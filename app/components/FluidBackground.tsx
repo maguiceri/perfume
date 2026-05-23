@@ -264,7 +264,6 @@ export default function FluidBackground() {
     };
     const onML = () => { mouse.on = false; };
     const onTM = (e: TouchEvent) => {
-      e.preventDefault();
       mouse.px = mouse.x; mouse.py = mouse.y;
       mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY;
       mouse.vx = mouse.x - mouse.px; mouse.vy = mouse.y - mouse.py;
@@ -282,7 +281,7 @@ export default function FluidBackground() {
     window.addEventListener('mousemove',  onMM);
     window.addEventListener('mouseleave', onML);
     window.addEventListener('resize',     onRz);
-    window.addEventListener('touchmove',  onTM, { passive: false });
+    window.addEventListener('touchmove',  onTM, { passive: true });
     window.addEventListener('touchend',   onTE);
     frame();
 

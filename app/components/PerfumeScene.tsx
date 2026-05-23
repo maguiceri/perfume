@@ -440,17 +440,23 @@ export default function PerfumeScene() {
         paddingTop: '68px',
         opacity: shopP * Math.max(0, 1 - contactP * 1.6),
         transform: `translateY(${shopSlideY}px)`,
-        pointerEvents: shopP > 0.6 ? 'auto' : 'none',
+        pointerEvents: 'none',
       }}>
-        <h2 style={{
-          fontFamily: 'Georgia, serif', fontWeight: 300,
-          fontSize: isMobile ? '1rem' : '1.55rem',
-          letterSpacing: isMobile ? '0.2em' : '0.45em',
-          color: '#7a5040', marginBottom: '0.5rem',
+        <div style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          width: '100%',
+          pointerEvents: shopP > 0.6 ? 'auto' : 'none',
         }}>
-          NUESTRA COLECCIÓN
-        </h2>
-        <Carousel isMobile={isMobile} />
+          <h2 style={{
+            fontFamily: 'Georgia, serif', fontWeight: 300,
+            fontSize: isMobile ? '1rem' : '1.55rem',
+            letterSpacing: isMobile ? '0.2em' : '0.45em',
+            color: '#7a5040', marginBottom: '0.5rem',
+          }}>
+            NUESTRA COLECCIÓN
+          </h2>
+          <Carousel isMobile={isMobile} />
+        </div>
       </div>
 
       {/* ── Contact section ───────────────────────────────────────────── */}
@@ -464,7 +470,7 @@ export default function PerfumeScene() {
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
         padding: isMobile ? '4rem 1.5rem 2.5rem' : '5rem 2rem 3rem',
-        pointerEvents: contactP > 0.5 ? 'auto' : 'none',
+        pointerEvents: 'none',
         opacity: clamp(contactP * 2, 0, 1),
       }}>
         {/* Subtle warm grain overlay */}
@@ -474,7 +480,10 @@ export default function PerfumeScene() {
           pointerEvents: 'none',
         }} />
 
-        <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '560px' }}>
+        <div style={{
+          position: 'relative', zIndex: 1, width: '100%', maxWidth: '560px',
+          pointerEvents: contactP > 0.5 ? 'auto' : 'none',
+        }}>
 
           {/* Heading */}
           <div style={{ textAlign: 'center', marginBottom: '2.8rem' }}>
