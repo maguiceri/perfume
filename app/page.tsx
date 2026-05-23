@@ -8,7 +8,7 @@ export default function Home() {
       <FluidBackground />
       <Header />
       <PerfumeScene />
-      <div style={{ height: '380vh' }} />
+      <div style={{ height: '550vh' }} />
     </>
   );
 }

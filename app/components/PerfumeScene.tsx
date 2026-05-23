@@ -42,26 +42,35 @@ const SLOTS = [
   { x:  400, ry:  48, s: 0.62, op: 0.42 },
 ];
 
+const MOBILE_SLOTS = [
+  { x: -250, ry: -42, s: 0.62, op: 0.38 },
+  { x: -128, ry: -26, s: 0.80, op: 0.70 },
+  { x:    0, ry:   0, s: 1.00, op: 1.00 },
+  { x:  128, ry:  26, s: 0.80, op: 0.70 },
+  { x:  250, ry:  42, s: 0.62, op: 0.38 },
+];
+
 function easeInOut(t: number) { return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; }
 function clamp(t: number, a = 0, b = 1) { return Math.max(a, Math.min(b, t)); }
 function mapRange(t: number, a: number, b: number) { return clamp((t - a) / (b - a)); }
 
-function Carousel() {
+function Carousel({ isMobile }: { isMobile: boolean }) {
   const [active, setActive]   = useState(0);
   const [hovered, setHovered] = useState<number | null>(null);
   const n = PRODUCTS.length;
   const go = (dir: 1 | -1) => setActive(i => (i + dir + n) % n);
+  const slots = isMobile ? MOBILE_SLOTS : SLOTS;
 
   return (
     <div style={{ width: '100%', userSelect: 'none' }}>
 
       {/* 3D stage — overflow visible so side cards show outside bounds */}
-      <div style={{ height: '370px', position: 'relative', overflow: 'visible' }}>
+      <div style={{ height: isMobile ? '310px' : '370px', position: 'relative', overflow: 'visible' }}>
         {PRODUCTS.map((prod, i) => {
             let off = ((i - active) % n + n) % n;
             if (off > Math.floor(n / 2)) off -= n; // –2..+2
 
-            const slot     = SLOTS[off + 2];
+            const slot     = slots[off + 2];
             const isActive = off === 0;
 
             const baseScale = isActive ? slot.s * 1.10 : slot.s;
@@ -307,6 +316,7 @@ export default function PerfumeScene() {
   const [appeared, setAppeared] = useState(false);
   // raw: scrollY / innerHeight, NOT clamped — can exceed 1
   const [raw, setRaw] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Refs for cursor tilt + float (RAF-driven, no re-renders)
   const heroImgRef  = useRef<HTMLImageElement>(null);
@@ -317,10 +327,17 @@ export default function PerfumeScene() {
   useEffect(() => { rawRef.current = raw; }, [raw]);
 
   useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
     const tid = setTimeout(() => setAppeared(true), 250);
     const onScroll = () => setRaw(window.scrollY / window.innerHeight);
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => { clearTimeout(tid); window.removeEventListener('scroll', onScroll); };
+    return () => {
+      clearTimeout(tid);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', checkMobile);
+    };
   }, []);
 
   // Cursor tilt + float RAF loop
@@ -363,24 +380,26 @@ export default function PerfumeScene() {
     };
   }, []);
 
-  // ── Phase 1: hero → shop (raw 0-1) ────────────────────────────────
-  const p1 = easeInOut(clamp(raw));
+  // ── Phase 1: hero → shop (raw 0-2) ────────────────────────────────
+  const p1 = easeInOut(clamp(raw, 0, 1));
 
   const floatScale   = 1 - p1 * 0.74;
-  const floatX       = p1 * -34;
-  const floatY       = p1 * -5;
-  const floatOpacity = appeared ? clamp(1 - mapRange(raw, 0.55, 0.85)) : 0;
+  const floatX       = p1 * (isMobile ? -6 : -34);
+  const floatY       = p1 * (isMobile ? -8 : -5);
+  // Perfume fades out slowly: starts at raw 0.8, gone by raw 1.4
+  const floatOpacity = appeared ? clamp(1 - mapRange(raw, 0.8, 1.4)) : 0;
 
-  // ── Phase 2: shop → contact (raw 1.2-1.9) ─────────────────────────
-  const contactP = easeInOut(mapRange(raw, 1.2, 1.9));
+  // ── Phase 2: shop → contact (raw 2.2-3.4) ─────────────────────────
+  const contactP = easeInOut(mapRange(raw, 2.2, 3.4));
 
-  const shopP      = easeInOut(mapRange(raw, 0.38, 0.88));
+  // Shop appears raw 0.6-1.6, exits as contact rises
+  const shopP      = easeInOut(mapRange(raw, 0.6, 1.6));
   // Entrance: slides in from below. Exit: continues up as contact rises.
   const shopSlideY = (1 - shopP) * 55 - contactP * 90;
   // Slide up from bottom + diagonal clip-path
-  const contactY  = (1 - contactP) * 100;          // % translateY
-  // Diagonal top edge: left starts higher, right at 0 — animates in together with slide
-  const diagPx    = Math.round((1 - contactP) * 80); // px offset for diagonal
+  const contactY  = (1 - contactP) * 100;
+  // Diagonal top edge animates in with the slide
+  const diagPx    = Math.round((1 - contactP) * 80);
 
   return (
     <>
@@ -404,7 +423,8 @@ export default function PerfumeScene() {
               src={IMG}
               alt="Libre YSL"
               style={{
-                maxHeight: '78vh', maxWidth: '55vw',
+                maxHeight: isMobile ? '62vh' : '78vh',
+                maxWidth: isMobile ? '82vw' : '55vw',
                 objectFit: 'contain', display: 'block',
                 willChange: 'transform, filter',
               }}
@@ -424,12 +444,13 @@ export default function PerfumeScene() {
       }}>
         <h2 style={{
           fontFamily: 'Georgia, serif', fontWeight: 300,
-          fontSize: '1.55rem', letterSpacing: '0.45em',
+          fontSize: isMobile ? '1rem' : '1.55rem',
+          letterSpacing: isMobile ? '0.2em' : '0.45em',
           color: '#7a5040', marginBottom: '0.5rem',
         }}>
           NUESTRA COLECCIÓN
         </h2>
-        <Carousel />
+        <Carousel isMobile={isMobile} />
       </div>
 
       {/* ── Contact section ───────────────────────────────────────────── */}
@@ -442,7 +463,7 @@ export default function PerfumeScene() {
         transition: 'none',
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        padding: '5rem 2rem 3rem',
+        padding: isMobile ? '4rem 1.5rem 2.5rem' : '5rem 2rem 3rem',
         pointerEvents: contactP > 0.5 ? 'auto' : 'none',
         opacity: clamp(contactP * 2, 0, 1),
       }}>
@@ -524,7 +545,11 @@ export default function PerfumeScene() {
 
           {/* Contact info */}
           <div style={{
-            display: 'flex', justifyContent: 'center', gap: '3rem',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: isMobile ? '0.7rem' : '3rem',
             marginTop: '2.2rem',
             fontSize: '0.62rem', letterSpacing: '0.1em',
             color: 'rgba(245,237,232,0.45)',
