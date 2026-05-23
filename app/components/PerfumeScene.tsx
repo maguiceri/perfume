@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-const IMG = '/https__chatgpt.com_s_m_6a108e0f45848191b7a2d5bd5d1587f4 • Hecho con ChatGPT.png';
+const IMG = '/perfume.png';
 
 const PRODUCTS = [
   {
