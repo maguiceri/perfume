@@ -65,7 +65,11 @@ function Carousel({ isMobile }: { isMobile: boolean }) {
     <div style={{ width: '100%', userSelect: 'none' }}>
 
       {/* 3D stage — overflow visible so side cards show outside bounds */}
-      <div style={{ height: isMobile ? '310px' : '370px', position: 'relative', overflow: 'visible' }}>
+      <div style={{
+        height: isMobile ? '280px' : '370px',
+        marginTop: isMobile ? '8px' : '0',
+        position: 'relative', overflow: 'visible',
+      }}>
         {PRODUCTS.map((prod, i) => {
             let off = ((i - active) % n + n) % n;
             if (off > Math.floor(n / 2)) off -= n; // –2..+2
@@ -73,7 +77,7 @@ function Carousel({ isMobile }: { isMobile: boolean }) {
             const slot     = slots[off + 2];
             const isActive = off === 0;
 
-            const baseScale = isActive ? slot.s * 1.10 : slot.s;
+            const baseScale = isActive ? slot.s * (isMobile ? 1.03 : 1.10) : slot.s;
 
             return (
               // ── Outer shell: carousel 3D positioning (React-driven) ──
@@ -83,13 +87,19 @@ function Carousel({ isMobile }: { isMobile: boolean }) {
                   position: 'absolute', top: 0, left: '50%', marginLeft: '-90px',
                   width: '180px',
                   zIndex: 5 - Math.abs(off),
-                  transform: `perspective(1100px) translateX(${slot.x}px) rotateY(${slot.ry}deg) scale(${baseScale})`,
+                  transform: `perspective(1100px) translateX(${slot.x}px) rotateY(${slot.ry}deg)`,
                   opacity: slot.op,
                   transition: 'transform 0.65s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.65s ease',
                   cursor: isActive ? 'default' : 'pointer',
                 }}
                 onClick={() => !isActive && go(off > 0 ? 1 : -1)}
               >
+              {/* ── Scale wrapper: grows downward only, no upward bleed ── */}
+              <div style={{
+                transform: `scale(${baseScale})`,
+                transformOrigin: 'top center',
+                transition: 'transform 0.65s cubic-bezier(0.25,0.46,0.45,0.94)',
+              }}>
               {/* ── Inner card: visual styling + hover tilt (DOM-driven) ── */}
               <div
                 className={isActive ? 'card-active' : ''}
@@ -129,8 +139,8 @@ function Carousel({ isMobile }: { isMobile: boolean }) {
                       '0 10px 32px rgba(188,143,143,0.14)',
                     ].join(', '),
                   } : {}),
-                  padding: '1.4rem 1rem 1.15rem',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.36rem',
+                  padding: isMobile ? '0.75rem 0.9rem 0.7rem' : '1.4rem 1rem 1.15rem',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? '0.22rem' : '0.36rem',
                   backdropFilter: 'blur(6px)',
                   willChange: 'transform',
                 }}
@@ -145,7 +155,7 @@ function Carousel({ isMobile }: { isMobile: boolean }) {
                 {/* Bottle + radial glow platform */}
                 <div style={{
                   position: 'relative',
-                  height: '155px',
+                  height: isMobile ? '110px' : '155px',
                   width: '100%',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   overflow: 'hidden',
@@ -164,7 +174,8 @@ function Carousel({ isMobile }: { isMobile: boolean }) {
                     alt={prod.name}
                     className={isActive ? 'bottle-img' : ''}
                     style={{
-                      maxHeight: '142px', maxWidth: '118px',
+                      maxHeight: isMobile ? '96px' : '142px',
+                      maxWidth: isMobile ? '80px' : '118px',
                       objectFit: 'contain',
                       filter: prod.filter,
                       transition: 'transform 0.4s ease, opacity 0.35s ease',
@@ -267,12 +278,13 @@ function Carousel({ isMobile }: { isMobile: boolean }) {
                 </button>
               </div>
               </div>
+              </div>
             );
         })}
       </div>
 
       {/* Arrow buttons */}
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem', marginTop: '1.4rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem', marginTop: isMobile ? '1.8rem' : '2.2rem' }}>
         {([[-1, '‹'], [1, '›']] as const).map(([dir, label]) => (
           <button
             key={dir}
@@ -393,9 +405,10 @@ export default function PerfumeScene() {
   const contactP = easeInOut(mapRange(raw, 2.2, 3.4));
 
   // Shop appears raw 0.6-1.6, exits as contact rises
-  const shopP      = easeInOut(mapRange(raw, 0.6, 1.6));
-  // Entrance: slides in from below. Exit: continues up as contact rises.
-  const shopSlideY = (1 - shopP) * 55 - contactP * 90;
+  const shopP         = easeInOut(mapRange(raw, 0.6, 1.6));
+  // Entrance: slides in 55px from below. Exit: rides 100vh off the top (matches contact's rise).
+  const shopEnterPx   = (1 - shopP) * 55;
+  const shopExitVh    = contactP * -100;
   // Slide up from bottom + diagonal clip-path
   const contactY  = (1 - contactP) * 100;
   // Diagonal top edge animates in with the slide
@@ -438,8 +451,8 @@ export default function PerfumeScene() {
         position: 'fixed', inset: 0, zIndex: 10,
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         paddingTop: '68px',
-        opacity: shopP * Math.max(0, 1 - contactP * 1.6),
-        transform: `translateY(${shopSlideY}px)`,
+        opacity: shopP,
+        transform: `translateY(calc(${shopEnterPx}px + ${shopExitVh}vh))`,
         pointerEvents: 'none',
       }}>
         <div style={{
@@ -523,7 +536,7 @@ export default function PerfumeScene() {
                       color: '#f5ede8',
                       fontSize: '0.82rem',
                       letterSpacing: '0.06em',
-                      padding: isMsg ? '0.9rem 1rem' : '0.75rem 0',
+                      padding: isMsg ? '1rem 1.1rem' : '0.85rem 0.2rem',
                       outline: 'none',
                       resize: 'none',
                       fontFamily: 'Georgia, serif',
