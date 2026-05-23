@@ -24,3 +24,45 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@keyframes cardGlow {
+  0%, 100% { box-shadow: 0 24px 64px rgba(188,143,143,0.28), 0 6px 24px rgba(196,163,90,0.18), inset 0 1px 0 rgba(255,255,255,1); }
+  50%       { box-shadow: 0 28px 80px rgba(188,143,143,0.40), 0 8px 32px rgba(196,163,90,0.28), inset 0 1px 0 rgba(255,255,255,1); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -300% center; }
+  100% { background-position:  300% center; }
+}
+
+@keyframes bottleFloat {
+  0%, 100% { transform: translateY(0px);   }
+  50%       { transform: translateY(-6px);  }
+}
+
+.card-active {
+  animation: cardGlow 3s ease-in-out infinite;
+}
+
+.card-active .bottle-img {
+  animation: bottleFloat 4s ease-in-out infinite;
+}
+
+.shimmer-btn {
+  background-size: 300% 100%;
+  background-image: linear-gradient(
+    120deg,
+    #bc8f8f 0%,
+    #c4a35a 30%,
+    #e8d09a 50%,
+    #c4a35a 70%,
+    #bc8f8f 100%
+  );
+  animation: shimmer 3.5s linear infinite;
+  transition: opacity 0.3s ease, transform 0.2s ease;
+}
+
+.shimmer-btn:hover {
+  opacity: 0.9;
+  transform: scaleX(0.97);
+}
