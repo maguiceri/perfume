@@ -35,19 +35,19 @@ const PRODUCTS = [
 // 3D slot config for offsets -2, -1, 0, +1, +2
 // x = horizontal offset from center (px), ry = rotateY, s = scale, op = opacity
 const SLOTS = [
-  { x: -400, ry: -48, s: 0.62, op: 0.42 },
-  { x: -215, ry: -30, s: 0.82, op: 0.74 },
-  { x:    0, ry:   0, s: 1.00, op: 1.00 },
-  { x:  215, ry:  30, s: 0.82, op: 0.74 },
-  { x:  400, ry:  48, s: 0.62, op: 0.42 },
+  { x: -400, y: 80, ry: -48, s: 0.62, op: 0.42 },
+  { x: -215, y: 36, ry: -30, s: 0.82, op: 0.74 },
+  { x:    0, y:  0, ry:   0, s: 1.00, op: 1.00 },
+  { x:  215, y: 36, ry:  30, s: 0.82, op: 0.74 },
+  { x:  400, y: 80, ry:  48, s: 0.62, op: 0.42 },
 ];
 
 const MOBILE_SLOTS = [
-  { x: -250, ry: -42, s: 0.62, op: 0.38 },
-  { x: -128, ry: -26, s: 0.80, op: 0.70 },
-  { x:    0, ry:   0, s: 1.00, op: 1.00 },
-  { x:  128, ry:  26, s: 0.80, op: 0.70 },
-  { x:  250, ry:  42, s: 0.62, op: 0.38 },
+  { x: -250, y: 55, ry: -42, s: 0.62, op: 0.38 },
+  { x: -128, y: 24, ry: -26, s: 0.80, op: 0.70 },
+  { x:    0, y:  0, ry:   0, s: 1.00, op: 1.00 },
+  { x:  128, y: 24, ry:  26, s: 0.80, op: 0.70 },
+  { x:  250, y: 55, ry:  42, s: 0.62, op: 0.38 },
 ];
 
 function easeInOut(t: number) { return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; }
@@ -57,19 +57,32 @@ function mapRange(t: number, a: number, b: number) { return clamp((t - a) / (b -
 function Carousel({ isMobile }: { isMobile: boolean }) {
   const [active, setActive]   = useState(0);
   const [hovered, setHovered] = useState<number | null>(null);
+  const touchStartX = useRef(0);
   const n = PRODUCTS.length;
   const go = (dir: 1 | -1) => setActive(i => (i + dir + n) % n);
   const slots = isMobile ? MOBILE_SLOTS : SLOTS;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1);
+  };
 
   return (
     <div style={{ width: '100%', userSelect: 'none' }}>
 
       {/* 3D stage — overflow visible so side cards show outside bounds */}
-      <div style={{
-        height: isMobile ? '280px' : '370px',
-        marginTop: isMobile ? '8px' : '0',
-        position: 'relative', overflow: 'visible',
-      }}>
+      <div
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+        style={{
+          height: isMobile ? '340px' : '460px',
+          marginTop: isMobile ? '8px' : '0',
+          position: 'relative', overflow: 'visible',
+        }}
+      >
         {PRODUCTS.map((prod, i) => {
             let off = ((i - active) % n + n) % n;
             if (off > Math.floor(n / 2)) off -= n; // –2..+2
@@ -87,7 +100,7 @@ function Carousel({ isMobile }: { isMobile: boolean }) {
                   position: 'absolute', top: 0, left: '50%', marginLeft: '-90px',
                   width: '180px',
                   zIndex: 5 - Math.abs(off),
-                  transform: `perspective(1100px) translateX(${slot.x}px) rotateY(${slot.ry}deg)`,
+                  transform: `perspective(1100px) translateX(${slot.x}px) translateY(${slot.y}px) rotateY(${slot.ry}deg)`,
                   opacity: slot.op,
                   transition: 'transform 0.65s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.65s ease',
                   cursor: isActive ? 'default' : 'pointer',
