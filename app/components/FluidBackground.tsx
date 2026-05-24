@@ -136,11 +136,15 @@ export default function FluidBackground() {
     const mc = canvas.getContext('2d'); if (!mc) return;
     const ctx: CanvasRenderingContext2D = mc;
 
-    initNoise();
+    // On touch devices: just paint the static background, skip animation entirely
+    const isMobile = window.matchMedia('(pointer: coarse)').matches;
 
     let W = window.innerWidth, H = window.innerHeight;
     canvas.width = W; canvas.height = H;
     ctx.fillStyle = '#f5ede8'; ctx.fillRect(0, 0, W, H);
+    if (isMobile) return;
+
+    initNoise();
 
     let pts: Pt[] = Array.from({ length: AMB_N }, () => mkAmb(W, H, true));
     let inkCount = 0;
@@ -263,13 +267,6 @@ export default function FluidBackground() {
       mouse.on = true; mouse.moved = true;
     };
     const onML = () => { mouse.on = false; };
-    const onTM = (e: TouchEvent) => {
-      mouse.px = mouse.x; mouse.py = mouse.y;
-      mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY;
-      mouse.vx = mouse.x - mouse.px; mouse.vy = mouse.y - mouse.py;
-      mouse.on = true; mouse.moved = true;
-    };
-    const onTE = () => { mouse.on = false; };
     const onRz = () => {
       W = window.innerWidth; H = window.innerHeight;
       canvas.width = W; canvas.height = H;
@@ -281,8 +278,6 @@ export default function FluidBackground() {
     window.addEventListener('mousemove',  onMM);
     window.addEventListener('mouseleave', onML);
     window.addEventListener('resize',     onRz);
-    window.addEventListener('touchmove',  onTM, { passive: true });
-    window.addEventListener('touchend',   onTE);
     frame();
 
     return () => {
@@ -290,8 +285,6 @@ export default function FluidBackground() {
       window.removeEventListener('mousemove',  onMM);
       window.removeEventListener('mouseleave', onML);
       window.removeEventListener('resize',     onRz);
-      window.removeEventListener('touchmove',  onTM);
-      window.removeEventListener('touchend',   onTE);
     };
   }, []);
 

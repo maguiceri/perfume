@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 
 const IMG = '/perfume.png';
 
@@ -54,7 +54,7 @@ function easeInOut(t: number) { return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * 
 function clamp(t: number, a = 0, b = 1) { return Math.max(a, Math.min(b, t)); }
 function mapRange(t: number, a: number, b: number) { return clamp((t - a) / (b - a)); }
 
-function Carousel({ isMobile }: { isMobile: boolean }) {
+const Carousel = memo(function Carousel({ isMobile }: { isMobile: boolean }) {
   const [active, setActive]   = useState(0);
   const [hovered, setHovered] = useState<number | null>(null);
   const touchStartX = useRef(0);
@@ -81,6 +81,7 @@ function Carousel({ isMobile }: { isMobile: boolean }) {
           height: isMobile ? '340px' : '460px',
           marginTop: isMobile ? '8px' : '0',
           position: 'relative', overflow: 'visible',
+          touchAction: 'pan-y',
         }}
       >
         {PRODUCTS.map((prod, i) => {
@@ -333,7 +334,7 @@ function Carousel({ isMobile }: { isMobile: boolean }) {
       </div>
     </div>
   );
-}
+});
 
 const FIELDS = ['Nombre', 'Correo electrónico', 'Mensaje'] as const;
 
